@@ -26,14 +26,19 @@ def write_to_s3(bucket: str, key: str, events: list[dict]) -> int:
     return len(events)
 
 def lambda_handler(event, context):
-    # Handle both Function URL (body is a string) and EventBridge (body is a dict)
     if isinstance(event.get("body"), str):
         payload = json.loads(event["body"])
     else:
         payload = event
 
+    # EventBridge sends a ping with no event_type — handle gracefully
+    if "event_type" not in payload:
+        print("Received EventBridge ping with no payload — skipping")
+        return {"statusCode": 200, "body": {"written": 0, "path": "none"}}
+
     event_type = payload["event_type"]
     events = payload["events"]
+    
 
     bucket = os.environ["RAW_BUCKET_NAME"]
     now = datetime.now(timezone.utc)

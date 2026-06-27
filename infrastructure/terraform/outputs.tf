@@ -22,3 +22,14 @@ output "glue_execution_role_arn" {
   description = "ARN of the Glue execution IAM role"
   value       = aws_iam_role.glue_execution_role.arn
 }
+
+
+output "lambda_function_url" {
+  description = "HTTPS endpoint for posting events to Lambda"
+  value       = aws_lambda_function_url.event_ingestion_url.function_url
+}
+
+output "lambda_function_name" {
+  description = "Lambda function name for CLI commands"
+  value       = aws_lambda_function.event_ingestion.function_name
+}
