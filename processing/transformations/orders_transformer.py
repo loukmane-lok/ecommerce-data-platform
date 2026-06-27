@@ -1,6 +1,6 @@
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, IntegerType, TimestampType
-from pyspark.sql.windown import Window
+from pyspark.sql.window import Window
 
 def log_count(df, step_name):
     """
