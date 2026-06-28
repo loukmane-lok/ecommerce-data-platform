@@ -57,7 +57,7 @@ def test_cast_types_price_is_double(spark):
 
 def test_cast_types_timestamp_is_timestamp(spark):
     df = spark.createDataFrame(
-        [("ord-1", "19.99", "2", "2024-01-15T14:30:00Z")],
+        [("ord-1", "19.99", "2", "2024-01-15T14:30:00.000000+00:00")],
         ["order_id", "price", "quantity", "timestamp"]
     )
 

@@ -39,7 +39,7 @@ def cast_types(df):
     df = df.withColumn("quantity", F.col("quantity").cast(IntegerType()))
     df = df.withColumn(
         "timestamp",
-        F.to_timestamp(F.col("timestamp"), "yyyy-MM-dd'T'HH:mm:ss'Z'")
+        F.to_timestamp(F.col("timestamp"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX")
     )
     return df
 

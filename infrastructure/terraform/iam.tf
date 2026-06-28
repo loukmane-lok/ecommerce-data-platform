@@ -42,9 +42,40 @@ resource "aws_iam_role_policy" "glue_execution_policy" {
         Effect = "Allow"
         Action = [
           "logs:CreateLogGroup",
+          "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
         Resource = "arn:aws:logs:${var.region}:${var.account_id}:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::ecommerce-pipeline-raw-824826126528",
+          "arn:aws:s3:::ecommerce-pipeline-curated-824826126528",
+          "arn:aws:s3:::ecommerce-pipeline-scripts-824826126528"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "glue:GetDatabase",
+          "glue:GetTable",
+          "glue:CreateTable",
+          "glue:UpdateTable",
+          "glue:DeleteTable",
+          "glue:BatchCreatePartition",
+          "glue:BatchDeletePartition",
+          "glue:BatchUpdatePartition",
+          "glue:BatchGetPartition"
+        ]
+        Resource = [
+          "arn:aws:glue:${var.region}:${var.account_id}:catalog",
+          "arn:aws:glue:${var.region}:${var.account_id}:database/ecommerce_db",
+          "arn:aws:glue:${var.region}:${var.account_id}:table/ecommerce_db/*"
+        ]
       }
     ]
   })
