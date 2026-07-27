@@ -82,6 +82,7 @@ def log_pipeline_failure(context):
         "error_message": error_message,
     }
     
-    os.makedirs("orchestration/logs", exist_ok=True)
-    with open("orchestration/logs/pipeline_failures.log", "a") as f:
+    log_dir = "/opt/airflow/logs"
+    os.makedirs(log_dir, exist_ok=True)
+    with open(os.path.join(log_dir, "pipeline_failures.log"), "a") as f:
         f.write(json.dumps(record) + "\n")

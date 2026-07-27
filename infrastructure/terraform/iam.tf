@@ -69,7 +69,11 @@ resource "aws_iam_role_policy" "glue_execution_policy" {
           "glue:BatchCreatePartition",
           "glue:BatchDeletePartition",
           "glue:BatchUpdatePartition",
-          "glue:BatchGetPartition"
+          "glue:BatchGetPartition",
+          "glue:UpdatePartition",
+          "glue:CreatePartition",
+          "glue:GetPartition",
+          "glue:GetPartitions"
         ]
         Resource = [
           "arn:aws:glue:${var.region}:${var.account_id}:catalog",
