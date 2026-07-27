@@ -15,14 +15,17 @@ services:
   
   airflow-init:
     image: apache/airflow:2.8.0
+    user:  "${AIRFLOW_UID}:0"
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    entrypoint: /bin/bash
+      AIRFLOW_ADMIN_USERNAME: ${AIRFLOW_ADMIN_USERNAME}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
     command:
+      - bash
       - -c
       - |
         airflow db upgrade
@@ -30,10 +33,11 @@ services:
           --username ${AIRFLOW_ADMIN_USERNAME} \
           --password ${AIRFLOW_ADMIN_PASSWORD} \
           --firstname Admin --lastname User \
-          --role Admin --email admin@example.com
+          --role Admin --email admin@example.com \
 
   airflow-scheduler:
     image: apache/airflow:2.8.0
+    user:  "${AIRFLOW_UID}:0"
     mem_limit: 1500m
     command: scheduler
     depends_on:
@@ -41,6 +45,8 @@ services:
         condition: service_completed_successfully
     volumes:
       - ./dags:/opt/airflow/dags:ro
+      - ./glue_helpers.py:/opt/airflow/plugins/glue_helpers.py:ro
+      - ../ingestion:/opt/ingestion:ro
       - ./logs:/opt/airflow/logs
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -62,6 +68,7 @@ services:
   
   airflow-webserver:
     image: apache/airflow:2.8.0
+    user:  "${AIRFLOW_UID}:0"
     mem_limit: 1000m
     command: webserver
     ports:
@@ -70,6 +77,8 @@ services:
       - airflow-scheduler
     volumes:
       - ./dags:/opt/airflow/dags:ro
+      - ./glue_helpers.py:/opt/airflow/plugins/glue_helpers.py:ro
+      - ../ingestion:/opt/ingestion:ro
       - ./logs:/opt/airflow/logs
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor

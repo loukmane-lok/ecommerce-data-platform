@@ -16,7 +16,8 @@ def build_s3_key(event_type: str, now: datetime) -> str:
 def write_to_s3(bucket: str, key: str, events: list[dict]) -> int:
     body = "\n".join(json.dumps(event) for event in events)
     
-    s3 = boto3.client("s3", region_name="eu-west-1")
+    region = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+    s3 = boto3.client("s3", region_name=region)
     s3.put_object(
         Bucket=bucket,
         Key=key,

@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 import os
-import requests
+import json
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
 from glue_helpers import (
+    get_boto3_client,
     start_crawler,
     wait_for_crawler,
     start_glue_job,
@@ -16,7 +17,9 @@ from glue_helpers import (
 
 RAW_BUCKET = os.environ.get("RAW_BUCKET")
 CURATED_BUCKET = os.environ.get("CURATED_BUCKET")
-LAMBDA_URL = os.environ.get("LAMBDA_URL")
+LAMBDA_FUNCTION_NAME = os.environ.get(
+    "LAMBDA_FUNCTION_NAME", "ecommerce-event-ingestion"
+)
 GLUE_CRAWLER_NAME = os.environ.get("GLUE_CRAWLER_NAME")
 GLUE_ETL_JOB = os.environ.get("GLUE_ETL_JOB")
 GLUE_DQ_JOB = os.environ.get("GLUE_DQ_JOB")
@@ -41,7 +44,6 @@ dag = DAG(
 )
 
 def generate_and_ingest(**kwargs):
-    import json
     import subprocess
     import sys
 
@@ -54,18 +56,31 @@ def generate_and_ingest(**kwargs):
     )
 
     result = subprocess.run(
-        [sys.executable, script_path, "--count", "100", "--type", "both"],
+        [sys.executable, script_path, "--count", "100", "--type", "orders"],
         capture_output=True,
         text=True,
-        check=True,
     )
 
-    payload = json.loads(result.stdout)
-    response = requests.post(LAMBDA_URL, json=payload, timeout=60)
+    if result.returncode != 0:
+        print(f"generate_events.py stderr:\n{result.stderr}")
+        print(f"generate_events.py stdout:\n{result.stdout}")
+        result.check_returncode()
 
+    payload = json.loads(result.stdout)
+    lambda_client = get_boto3_client("lambda", AWS_REGION)
+    invoke_response = lambda_client.invoke(
+        FunctionName=LAMBDA_FUNCTION_NAME,
+        Payload=json.dumps(payload),
+    )
+
+    response_payload = invoke_response["Payload"].read().decode("utf-8")
     print(f"Sent {len(payload.get('events', []))} events to Lambda")
-    print(f"Lambda response status: {response.status_code}")
-    response.raise_for_status()
+    print(
+        f"Lambda invoke status: {invoke_response.get('StatusCode')}, "
+        f"response: {response_payload}"
+    )
+    if invoke_response.get("FunctionError"):
+        raise RuntimeError(f"Lambda returned an error: {response_payload}")
 
 
 def run_crawler(**kwargs):
@@ -90,8 +105,15 @@ def verify_output(**kwargs):
     has_data = check_s3_prefix_has_data(CURATED_BUCKET, prefix, AWS_REGION)
 
     if not has_data:
+        # List existing partitions to aid debugging
+        s3 = get_boto3_client("s3", AWS_REGION)
+        resp = s3.list_objects_v2(
+            Bucket=CURATED_BUCKET, Prefix="orders/", MaxKeys=10, Delimiter="/"
+        )
+        existing = [cp["Prefix"] for cp in resp.get("CommonPrefixes", [])]
         raise ValueError(
-            "No curated data found for today — pipeline may have written to wrong path"
+            f"No curated data for {today} at s3://{CURATED_BUCKET}/{prefix}. "
+            f"Existing partitions: {existing}"
         )
     print(f"Verified curated data exists at s3://{CURATED_BUCKET}/{prefix}")
     

@@ -17,3 +17,7 @@ credentials.csv
 # Linux
 *~
 .nfs*
+
+# Logs
+*.log
+orchestration/logs/
