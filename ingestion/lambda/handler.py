@@ -3,6 +3,7 @@ import os
 import boto3
 from datetime import datetime, timezone
 
+
 def build_s3_key(event_type: str, now: datetime) -> str:
     return (
         f"{event_type}/"
@@ -12,10 +13,11 @@ def build_s3_key(event_type: str, now: datetime) -> str:
         f"hour={now.strftime('%H')}/"
         f"batch_{now.strftime('%Y%m%d_%H%M%S')}.jsonl"
     )
-    
+
+
 def write_to_s3(bucket: str, key: str, events: list[dict]) -> int:
     body = "\n".join(json.dumps(event) for event in events)
-    
+
     region = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
     s3 = boto3.client("s3", region_name=region)
     s3.put_object(
@@ -25,6 +27,7 @@ def write_to_s3(bucket: str, key: str, events: list[dict]) -> int:
         ContentType="application/x-ndjson"
     )
     return len(events)
+
 
 def lambda_handler(event, context):
     if isinstance(event.get("body"), str):
@@ -39,7 +42,6 @@ def lambda_handler(event, context):
 
     event_type = payload["event_type"]
     events = payload["events"]
-    
 
     bucket = os.environ["RAW_BUCKET_NAME"]
     now = datetime.now(timezone.utc)
@@ -57,4 +59,3 @@ def lambda_handler(event, context):
             "path": s3_path
         }
     }
-    

@@ -9,6 +9,7 @@ from orders_transformer import (
     filter_invalid_ranges, deduplicate, add_derived_columns
 )
 
+
 @pytest.fixture(scope="session")
 def spark():
     java_bin = shutil.which("java")
@@ -19,6 +20,7 @@ def spark():
             .master("local[1]")
             .appName("test_transformations")
             .getOrCreate())
+
 
 def test_validate_schema_drops_unexpected_column(spark):
     df = spark.createDataFrame(
@@ -34,6 +36,7 @@ def test_validate_schema_drops_unexpected_column(spark):
 
     assert "unexpected_field" not in result.columns
 
+
 def test_validate_schema_raises_on_missing_required_column(spark):
     df = spark.createDataFrame(
         [("u-1", "p-1", "electronics")],
@@ -45,6 +48,7 @@ def test_validate_schema_raises_on_missing_required_column(spark):
     with pytest.raises(ValueError, match="Missing required columns"):
         validate_schema(df, EXPECTED)
 
+
 def test_cast_types_price_is_double(spark):
     df = spark.createDataFrame(
         [("ord-1", "19.99", "2", "2024-01-15T14:30:00Z")],
@@ -54,6 +58,7 @@ def test_cast_types_price_is_double(spark):
     result = cast_types(df)
 
     assert result.schema["price"].dataType == DoubleType()
+
 
 def test_cast_types_timestamp_is_timestamp(spark):
     df = spark.createDataFrame(
@@ -67,7 +72,7 @@ def test_cast_types_timestamp_is_timestamp(spark):
 
 
 def test_handle_nulls_drops_null_order_id(spark):
-    import pyspark.sql.functions as F
+    pass
 
     df = spark.createDataFrame(
         [("ord-1", "2024-01-15T14:30:00Z", "completed", "US"),
@@ -79,7 +84,8 @@ def test_handle_nulls_drops_null_order_id(spark):
     result = handle_nulls(df)
 
     assert result.count() == 2
-    
+
+
 def test_handle_nulls_fills_null_status(spark):
     import pyspark.sql.functions as F
 
@@ -95,7 +101,8 @@ def test_handle_nulls_fills_null_status(spark):
     assert result.count() == 3
     assert result.filter(F.col("status").isNull()).count() == 0
     assert result.filter(F.col("status") == "unknown").count() == 1
-    
+
+
 def test_filter_invalid_ranges_drops_negative_price(spark):
     df = spark.createDataFrame(
         [("ord-1", -5.0,  2),
@@ -108,8 +115,8 @@ def test_filter_invalid_ranges_drops_negative_price(spark):
 
     assert result.count() == 2
 
+
 def test_deduplicate_keeps_earliest_timestamp(spark):
-    from pyspark.sql.types import TimestampType
     import pyspark.sql.functions as F
 
     df = spark.createDataFrame(
@@ -125,7 +132,8 @@ def test_deduplicate_keeps_earliest_timestamp(spark):
 
     assert result.count() == 2
     assert kept["timestamp"].hour == 14
-    
+
+
 def test_add_derived_columns_order_value(spark):
     import pyspark.sql.functions as F
 
@@ -140,7 +148,8 @@ def test_add_derived_columns_order_value(spark):
     row = result.collect()[0]
 
     assert row["order_value"] == 30.0
-    
+
+
 def test_add_derived_columns_order_date_type(spark):
     import pyspark.sql.functions as F
 

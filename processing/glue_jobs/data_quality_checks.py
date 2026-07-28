@@ -7,6 +7,7 @@ from pyspark.sql import functions as F
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 def completeness_check(df, column, threshold):
     total = df.count()
     non_null = df.filter(F.col(column).isNotNull()).count()
@@ -22,6 +23,8 @@ def completeness_check(df, column, threshold):
     }
     logger.info(json.dumps(log_entry))
     return result
+
+
 def uniqueness_check(df, primary_key_column):
     total = df.count()
     distinct = df.select(primary_key_column).distinct().count()
@@ -37,6 +40,7 @@ def uniqueness_check(df, primary_key_column):
     }
     logger.info(json.dumps(log_entry))
     return result
+
 
 def freshness_check(df, timestamp_column, max_age_hours=24):
     max_ts = df.agg(F.max(F.col(timestamp_column))).collect()[0][0]
@@ -55,6 +59,7 @@ def freshness_check(df, timestamp_column, max_age_hours=24):
     logger.info(json.dumps(log_entry))
     return result
 
+
 def range_check(df, column, min_val, max_val):
     out_of_range = df.filter(
         (F.col(column) < min_val) | (F.col(column) > max_val)
@@ -72,6 +77,7 @@ def range_check(df, column, min_val, max_val):
     }
     logger.info(json.dumps(log_entry))
     return result
+
 
 def run_all_checks(df):
     results = []
@@ -93,6 +99,7 @@ def run_all_checks(df):
     }
     logger.info(json.dumps(summary))
     return results
+
 
 if __name__ == "__main__":
     import sys

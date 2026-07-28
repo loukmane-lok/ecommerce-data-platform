@@ -1,6 +1,7 @@
 from pyspark.sql import functions as F
-from pyspark.sql.types import DoubleType, IntegerType, TimestampType
+from pyspark.sql.types import DoubleType, IntegerType
 from pyspark.sql.window import Window
+
 
 def log_count(df, step_name):
     """
@@ -10,6 +11,7 @@ def log_count(df, step_name):
     count = df.count()
     print(f"STEP [{step_name}]: {count} rows")
     return count
+
 
 def validate_schema(df, expected_columns):
     """
@@ -43,6 +45,7 @@ def cast_types(df):
     )
     return df
 
+
 def handle_nulls(df):
     """
     Drops rows with null order_id or timestamp (unrecoverable).
@@ -54,6 +57,7 @@ def handle_nulls(df):
     df = df.fillna({"status": "unknown", "country": "unknown"})
 
     return df
+
 
 def filter_invalid_ranges(df):
     """
@@ -75,14 +79,15 @@ def deduplicate(df):
     Uses a Window function for deterministic, rule-based deduplication.
     """
     window_spec = (Window
-        .partitionBy("order_id")
-        .orderBy(F.col("timestamp").asc()))
+                   .partitionBy("order_id")
+                   .orderBy(F.col("timestamp").asc()))
 
     df = df.withColumn("row_num", F.row_number().over(window_spec))
     df = df.filter(F.col("row_num") == 1)
     df = df.drop("row_num")
 
     return df
+
 
 def add_derived_columns(df):
     """

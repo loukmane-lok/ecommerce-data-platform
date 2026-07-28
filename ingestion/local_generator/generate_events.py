@@ -22,7 +22,8 @@ def make_order() -> dict:
         status=random.choice(["pending", "confirmed", "shipped", "cancelled"]),
         country=random.choice(["FR", "DE", "GB", "ES", "IT"])
     ))
-    
+
+
 def make_click() -> dict:
     page_type = random.choice(["home", "product", "cart", "checkout", "confirm"])
     return asdict(ClickEvent(
@@ -35,7 +36,8 @@ def make_click() -> dict:
         country=random.choice(["FR", "DE", "GB", "ES", "IT"]),
         referrer=random.choice(["google", "direct", "email", "social", None])
     ))
-    
+
+
 def inject_noise(events: list[dict], event_type: str) -> list[dict]:
     noisy = []
     duplicates = []
@@ -57,7 +59,6 @@ def inject_noise(events: list[dict], event_type: str) -> list[dict]:
 
     noisy.extend(duplicates)
     return noisy, len(duplicates)
-
 
 
 def main():
@@ -87,6 +88,6 @@ def main():
 
     print(json.dumps(output))
 
+
 if __name__ == "__main__":
     main()
-

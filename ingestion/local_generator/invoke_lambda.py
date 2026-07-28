@@ -1,6 +1,6 @@
 import subprocess
-import json
 import sys
+
 
 def main():
     # Read JSON from stdin (piped from generate_events.py)
@@ -18,6 +18,7 @@ def main():
     print(result.stdout)
     if result.returncode != 0:
         print(result.stderr, file=sys.stderr)
+
 
 if __name__ == "__main__":
     main()

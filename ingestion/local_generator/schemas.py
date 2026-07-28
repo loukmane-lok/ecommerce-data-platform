@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass
 class OrderEvent:
     order_id: Optional[str]       # UUID string — Optional because we'll inject nulls as noise
@@ -13,7 +14,8 @@ class OrderEvent:
     timestamp: Optional[str]      # ISO 8601 UTC — Optional because we'll inject nulls
     status: str                   # pending | confirmed | shipped | cancelled
     country: str                  # FR | DE | GB | ES | IT
-    
+
+
 @dataclass
 class ClickEvent:
     session_id: str                # UUID — always present, tracks a browser session

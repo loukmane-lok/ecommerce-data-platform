@@ -1,4 +1,3 @@
-import pytest
 from datetime import datetime, timezone
 from moto import mock_aws
 import boto3
@@ -7,13 +6,15 @@ import os
 
 from handler import build_s3_key, write_to_s3, lambda_handler
 
+
 def test_build_s3_key_format():
     now = datetime(2024, 6, 27, 14, 30, 0, tzinfo=timezone.utc)
     key = build_s3_key("orders", now)
     assert key.startswith("orders/year=2024/month=06/day=27/hour=14/")
     assert key.endswith(".jsonl")
     assert "batch_" in key
-    
+
+
 @mock_aws
 def test_write_to_s3_creates_file():
     # Create the fake bucket first — moto starts blank every time
@@ -32,7 +33,8 @@ def test_write_to_s3_creates_file():
     response = s3.get_object(Bucket="test-bucket", Key=key)
     assert count == 1
     assert response["ResponseMetadata"]["HTTPStatusCode"] == 200
-    
+
+
 @mock_aws
 def test_lambda_handler_returns_200():
     boto3.client("s3", region_name="us-east-1").create_bucket(Bucket="test-bucket")
@@ -47,7 +49,8 @@ def test_lambda_handler_returns_200():
     response = lambda_handler(event, context=None)
     assert response["statusCode"] == 200
     assert response["body"]["written"] == 1
-    
+
+
 @mock_aws
 def test_lambda_handler_writes_jsonl():
     boto3.client("s3", region_name="us-east-1").create_bucket(Bucket="test-bucket")
