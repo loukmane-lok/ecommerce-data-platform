@@ -21,3 +21,5 @@ credentials.csv
 # Logs
 *.log
 orchestration/logs/
+
+*.zip
