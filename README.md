@@ -140,4 +140,4 @@ At production data volumes, Glue would remain the primary lever: job-hours scale
 **Loukmane Daoudi**
 [LinkedIn](https://www.linkedin.com/in/loukmane-daoudi/) · [GitHub](https://github.com/loukmane-lok/)
 
-AI and Data Science Engineering graduate from ENSIA (Algeria) with research experience in reinforcement learning at EURECOM (Sophia Antipolis), currently seeking a data engineering internship (stage) or apprenticeship (alternance) in France.
+AI and Data Science Engineering graduate from ENSIA (Algeria), focused on building reliable, production-minded data platforms with Python, AWS, Terraform, Airflow, and PySpark. I enjoy turning raw data into trusted, queryable insights through thoughtful architecture, automation, testing, and monitoring. Currently seeking a data engineering internship (stage) or apprenticeship (alternance) in France, where I can contribute quickly and grow alongside an experienced team.
