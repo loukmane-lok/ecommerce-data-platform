@@ -10,14 +10,14 @@ An end-to-end analytics platform that ingests e-commerce order events via AWS La
 
 ![Architecture](architecture/pipeline_diagram.png)
 
-Order and clickstream events are generated locally and sent to an AWS Lambda function, which writes each event as JSON to a Hive-partitioned raw zone in S3. In the orchestrated daily pipeline, Airflow triggers the local generator as a subprocess and invokes Lambda directly through the AWS SDK (`boto3`), rather than over HTTP; the Lambda function also exposes a Function URL, usable for manual or ad-hoc testing outside the DAG. A Glue Crawler catalogs the raw data, after which a PySpark ETL job on AWS Glue applies a six-step transformation pipeline and writes the result as partitioned Parquet to a curated S3 zone. A Glue Data Quality job then validates the curated data against four checks before it becomes queryable through Athena. Apache Airflow, running in Docker with a LocalExecutor, orchestrates this entire sequence on a daily schedule, while CloudWatch captures logs and row counts at every stage.
+Order and clickstream events are generated locally and sent to an AWS Lambda function, which writes each event as JSON to a Hive-partitioned raw zone in S3. In the orchestrated daily pipeline, Airflow triggers the local generator as a subprocess and invokes Lambda directly through the AWS SDK (`boto3`), rather than over HTTP; the Lambda function also exposes an IAM-protected Function URL for signed HTTP calls if needed, while `make ingest` uses the AWS CLI invoke API for ad-hoc testing. A Glue Crawler catalogs the raw data, after which a PySpark ETL job on AWS Glue applies a six-step transformation pipeline and writes the result as partitioned Parquet to a curated S3 zone. A Glue Data Quality job then validates the curated data against four checks before it becomes queryable through Athena. Apache Airflow, running in Docker with a LocalExecutor, orchestrates this entire sequence on a daily schedule, while CloudWatch captures logs and row counts at every stage.
 
 ## Tech Stack
 
 | Tool | Purpose | Why this tool |
 |---|---|---|
 | Python | Event generation, Lambda handler, transformation logic | Single language across ingestion and transformation keeps the codebase approachable and testable with a shared toolchain |
-| AWS Lambda | Serverless event ingestion via Function URL | No server to provision for a bursty, low-latency ingestion path; scales to zero between events |
+| AWS Lambda | Serverless event ingestion (SDK/CLI invoke; optional IAM Function URL) | No server to provision for a bursty, low-latency ingestion path; scales to zero between events |
 | S3 | Raw and curated data storage | Durable, cheap object storage that both Glue and Athena can query directly without a separate database layer |
 | AWS Glue (Crawler) | Schema inference and Data Catalog population | Removes the need to hand-maintain table DDL as the raw schema evolves |
 | AWS Glue (ETL) | Serverless PySpark transformation execution | Avoids managing EMR cluster lifecycle/scaling for a workload that only runs briefly once a day, at a scale where per-second billing outweighs cluster warm-up overhead |
@@ -79,7 +79,7 @@ Click events land in the raw S3 zone in the same Hive-partitioned JSONL format a
 
 ### Ingestion
 
-A local Python generator produces synthetic order and clickstream events, injecting realistic noise such as null fields and out-of-range values. In the orchestrated daily pipeline, Airflow runs the generator as a subprocess and passes its output directly to an AWS Lambda function through the AWS SDK (`boto3`'s `invoke`), which writes each event as a line of JSON to a Hive-partitioned raw zone in S3. The same Lambda function also exposes a Function URL for manual invocation outside the DAG, such as ad-hoc local testing.
+A local Python generator produces synthetic order and clickstream events, injecting realistic noise such as null fields and out-of-range values. In the orchestrated daily pipeline, Airflow runs the generator as a subprocess and passes its output directly to an AWS Lambda function through the AWS SDK (`boto3`'s `invoke`), which writes each event as a line of JSON to a Hive-partitioned raw zone in S3. For ad-hoc runs outside the DAG, use `make ingest` (AWS CLI `lambda invoke` with your IAM user) or the optional Function URL with SigV4 signing (`lambda:InvokeFunctionUrl`).
 
 ### Processing
 

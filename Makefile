@@ -3,8 +3,14 @@ generate:
 	python ingestion/local_generator/generate_events.py --count 100 --type both
 
 ingest:
-	# Manual/ad-hoc: POST to Lambda Function URL. Requires LAMBDA_URL in .env
-	@curl -X POST $$(LAMBDA_URL) -H "Content-Type: application/json" --data-binary @payload.json
+	# Manual/ad-hoc: invoke Lambda via AWS CLI (requires IAM lambda:InvokeFunction)
+	@payload=$$(python ingestion/local_generator/generate_events.py --count 100 --type orders); \
+	aws lambda invoke \
+	  --function-name $${LAMBDA_FUNCTION_NAME:-ecommerce-event-ingestion} \
+	  --region $${AWS_DEFAULT_REGION:-us-east-1} \
+	  --cli-binary-format raw-in-base64-out \
+	  --payload "$$payload" \
+	  /dev/stdout && echo
 
 test:
 	python3 -m pytest processing/transformations/test_transformations.py ingestion/lambda/test_handler_local.py -v

@@ -25,7 +25,7 @@ output "glue_execution_role_arn" {
 
 
 output "lambda_function_url" {
-  description = "HTTPS endpoint for posting events to Lambda"
+  description = "HTTPS endpoint for posting events (requires SigV4 / lambda:InvokeFunctionUrl)"
   value       = aws_lambda_function_url.event_ingestion_url.function_url
 }
 

@@ -61,7 +61,7 @@ resource "aws_lambda_function" "event_ingestion" {
 
 resource "aws_lambda_function_url" "event_ingestion_url" {
   function_name      = aws_lambda_function.event_ingestion.function_name
-  authorization_type = "NONE"
+  authorization_type = "AWS_IAM"
 
   cors {
     allow_origins = ["*"]
